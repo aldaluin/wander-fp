@@ -1,0 +1,125 @@
+#define FULLLOG
+// #undef FULLOG
+
+using System;
+using System.Collections.Generic;
+using Goldraven.Generic;
+using Goldraven.Mgmt;
+using UnityEngine;
+
+namespace Goldraven.Deprecated {
+
+    [Serializable]
+    public class GoalLibrary : MonoBehaviour {
+
+        /*
+         *       cmcb 2019/04/21
+         *       Status: development
+         *
+         *       Provide  a common place to access all GoalManagers by proxy.
+         *       This is to allow setup in the Inspector instead of forcing code.
+         *
+         *       Deliberately no UI
+         *       This goes... where??
+         */
+
+        [Serializable]
+        public struct GoalTrigger {
+            public GoalManager Goal;
+            public int CriteriaIndex;
+            public bool isSuccess; // false is failure
+        }
+
+        [Serializable]
+        public struct GoalTriggerIndex {
+            public int id; // Id used by Increment()
+            public int index; // Index into the goal trigger array
+        }
+
+        #region Properties
+
+        // Constants
+
+        // Static
+        private static int _count = 0;
+        private static Dictionary<string, GoalLibrary> allLibraries = new Dictionary<string, GoalLibrary> ();
+        public static GoalLibrary library { get; private set; }
+        public static int count { get { return _count; } }
+
+        // Local
+
+        [SerializeField]
+        private string LibraryName;
+        public string libname { get { return LibraryName; } }
+        public GoalTrigger[] Triggers;
+        public GoalTriggerIndex[] IdSet;
+
+        #endregion
+
+        #region Methods
+
+        // Unity methods
+        void Awake () {
+#if FULLLOG
+            MoreDebug.Log ("go: " + gameObject.name);
+#endif
+
+            // half-assed singleton (no duplicate keys)
+            if (allLibraries.ContainsKey (LibraryName)) {
+                Destroy (gameObject);
+                return;
+            }
+
+            allLibraries.Add (LibraryName, this);
+            _count++;
+
+        }
+
+        void Start () {
+#if FULLLOG
+            MoreDebug.Log ("go: " + gameObject.name);
+#endif
+        }
+
+        // static methods
+
+        public static void Pick (string _ln_) {
+#if FULLLOG
+            MoreDebug.Log (_ln_);
+#endif
+            library = allLibraries[_ln_];
+
+        }
+
+        // local methods
+
+        public void Increment (int ident) {
+#if FULLLOG
+            MoreDebug.Log ("go: " + gameObject.name);
+#endif
+            GoalTrigger gt = new GoalTrigger ();
+            bool found = false;
+            // linear search of unsorted array GoalTriggerIndex
+            foreach (GoalTriggerIndex pair in IdSet) {
+                if (pair.id == ident) {
+                    gt = Triggers[pair.index];
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                MoreDebug.LogError ("Bad library entry");
+            }
+            // fire the appropriate event
+            if (gt.isSuccess) {
+                gt.Goal.IncrementSucceedCriterion (gt.CriteriaIndex);
+            } else {
+                gt.Goal.IncrementFailCriterion (gt.CriteriaIndex);
+            }
+        }
+
+        #endregion
+
+    }
+}

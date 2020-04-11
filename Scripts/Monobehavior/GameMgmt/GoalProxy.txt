@@ -1,0 +1,66 @@
+#define FULLLOG
+// #undef FULLOG
+
+using System;
+using Goldraven.Generic;
+using UnityEngine;
+
+namespace Goldraven.Deprecated {
+
+    [Serializable]
+    public class GoalProxy : MonoBehaviour {
+
+        /*
+         *       cmcb 2019/04/21
+         *       Status: development
+         *
+         *       Provide  a static place holder for dynamic persistent goal managers.
+         *       This is to allow setup in the Inspector instead of forcing code.
+         *
+         *       Deliberately no UI
+         *       This goes... where??
+         */
+
+        #region Properties
+
+        // Constants
+
+        // Local
+        public string LibraryName;
+        public int[] libraryIndex;
+
+        #endregion
+
+        #region Methods
+
+        // Unity methods
+        void Awake () {
+#if FULLLOG
+            MoreDebug.Log ("go: " + gameObject.name);
+#endif
+
+        }
+
+        void Start () {
+#if FULLLOG
+            MoreDebug.Log ("go: " + gameObject.name);
+#endif
+            if (LibraryName != GoalLibrary.library.libname) {
+                gameObject.SetActive (false);
+            }
+        }
+
+        // local methods
+
+        public void Increment (int HashKey) {
+#if FULLLOG
+            MoreDebug.Log ("go: " + gameObject.name + ", key: " + HashKey);
+#endif
+
+            GoalLibrary.library.Increment (HashKey);
+        }
+
+        #endregion
+
+    }
+}
